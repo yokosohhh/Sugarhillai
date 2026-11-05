@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SugarHill-Aruna AI - Modern AI Assistant</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Marked.js for Markdown parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Custom CSS for Dynamic Themes & Animations -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+    * {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.2);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(156, 163, 175, 0.4);
+    }
+
+    /* Theme Variable Definitions */
+    :root[data-theme="dark"] {
+      --bg-main: #09090b;
+      --bg-sidebar: #121215;
+      --bg-card: #18181b;
+      --bg-hover: #27272a;
+      --border-color: #27272a;
+      --text-main: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --accent: #22c55e;
+      --accent-glow: rgba(34, 197, 94, 0.15);
+      --chat-user-bg: #1f2937;
+      --chat-ai-bg: #111827;
+    }
+
+    :root[data-theme="light"] {
+      --bg-main: #f8fafc;
+      --bg-sidebar: #ffffff;
+      --bg-card: #f1f5f9;
+      --bg-hover: #e2e8f0;
+      --border-color: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --accent: #16a34a;
+      --accent-glow: rgba(22, 163, 74, 0.1);
+      --chat-user-bg: #e2e8f0;
+      --chat-ai-bg: #ffffff;
+    }
+
+    :root[data-theme="cyberpunk"] {
+      --bg-main: #05050d;
+      --bg-sidebar: #0b0b1a;
+      --bg-card: #12122b;
+      --bg-hover: #1e1e42;
+      --border-color: #2d2d63;
+      --text-main: #e0e7ff;
+      --text-muted: #818cf8;
+      --accent: #06b6d4;
+      --accent-glow: rgba(6, 182, 212, 0.2);
+      --chat-user-bg: #1a103c;
+      --chat-ai-bg: #0f172a;
+    }
+
+    :root[data-theme="oled"] {
+      --bg-main: #000000;
+      --bg-sidebar: #000000;
+      --bg-card: #0a0a0a;
+      --bg-hover: #171717;
+      --border-color: #262626;
+      --text-main: #ffffff;
+      --text-muted: #737373;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.2);
+      --chat-user-bg: #171717;
+      --chat-ai-bg: #0a0a0a;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .bg-theme-main { background-color: var(--bg-main); }
+    .bg-theme-sidebar { background-color: var(--bg-sidebar); }
+    .bg-theme-card { background-color: var(--bg-card); }
+    .bg-theme-hover:hover { background-color: var(--bg-hover); }
+    .border-theme { border-color: var(--border-color); }
+    .text-theme-muted { color: var(--text-muted); }
+
+    .chat-bubble-user {
+      background-color: var(--chat-user-bg);
+      border-color: var(--border-color);
+    }
+    .chat-bubble-ai {
+      background-color: var(--chat-ai-bg);
+      border-color: var(--border-color);
+    }
+
+    /* Markdown Output Styles */
+    .markdown-body p { margin-bottom: 0.75rem; line-height: 1.6; }
+    .markdown-body ul { list-style-type: disc; padding-left: 1.25rem; margin-bottom: 0.75rem; }
+    .markdown-body ol { list-style-type: decimal; padding-left: 1.25rem; margin-bottom: 0.75rem; }
+    .markdown-body code { background: rgba(128, 128, 128, 0.2); padding: 0.15rem 0.35rem; border-radius: 0.25rem; font-size: 0.85em; }
+    .markdown-body pre { background: #0d1117; color: #c9d1d9; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin-bottom: 0.75rem; position: relative; }
+    .markdown-body pre code { background: transparent; padding: 0; }
+  </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+  <!-- Mobile Overlay -->
+  <div id="mobile-overlay" class="fixed inset-0 bg-black/60 z-40 hidden md:hidden backdrop-blur-sm"></div>
+
+  <!-- Sidebar Container -->
+  <aside id="sidebar" class="fixed md:static inset-y-0 left-0 z-50 w-72 bg-theme-sidebar border-r border-theme flex flex-col transition-transform duration-300 -translate-x-full md:translate-x-0 shrink-0">
+    
+    <!-- App Logo Header -->
+    <div class="p-4 border-b border-theme flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-lg shadow-emerald-500/10">
+          <!-- Cpu/AI Icon SVG -->
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M3 9h2m-2 6h2m14-6h2m-2 6h2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+        </div>
+        <div>
+          <h1 class="font-bold text-sm tracking-wide">SugarHill-Aruna AI</h1>
+          <p class="text-[10px] text-theme-muted tracking-wider uppercase font-semibold">SugarHill 3.3</p>
+        </div>
+      </div>
+      
+      <!-- Close Mobile Sidebar -->
+      <button id="close-sidebar-btn" class="md:hidden p-1.5 text-theme-muted hover:text-white rounded-lg bg-theme-hover">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <!-- Action Buttons (New Chat & Prompt Library) -->
+    <div class="p-3 space-y-2">
+      <button id="new-chat-btn" class="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-xl shadow-md transition-all duration-200">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <span>Percakapan Baru</span>
+      </button>
+
+      <button id="toggle-library-btn" class="w-full flex items-center justify-between py-2 px-3 bg-theme-card hover:bg-theme-hover border border-theme text-xs font-medium rounded-xl transition">
+        <div class="flex items-center space-x-2">
+          <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          <span>Prompt Vault</span>
+        </div>
+        <svg id="library-chevron" class="w-3.5 h-3.5 text-theme-muted transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+      </button>
+
+      <!-- Collapsible Prompt Vault Panel -->
+      <div id="prompt-library-panel" class="hidden space-y-1.5 pt-1 max-h-48 overflow-y-auto pr-1">
+        <button onclick="injectPrompt('Buatkan skrip Python untuk web scraping berita terbaru dan menyimpannya ke JSON.')" class="w-full text-left p-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg text-[11px] text-theme-muted hover:text-white transition truncate block">
+          <span class="font-semibold text-emerald-500 mr-1">[CODE]</span> Web Scraper Python
+        </button>
+        <button onclick="injectPrompt('Tulis postingan LinkedIn profesional tentang tren AI terbaru dalam produktivitas kerja.')" class="w-full text-left p-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg text-[11px] text-theme-muted hover:text-white transition truncate block">
+          <span class="font-semibold text-emerald-500 mr-1">[WRITING]</span> Postingan LinkedIn
+        </button>
+        <button onclick="injectPrompt('Jelaskan konsep Quantum Computing secara sederhana seperti menjelaskan kepada anak umur 10 tahun.')" class="w-full text-left p-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg text-[11px] text-theme-muted hover:text-white transition truncate block">
+          <span class="font-semibold text-emerald-500 mr-1">[STUDY]</span> Quantum Computing Simple
+        </button>
+        <button onclick="injectPrompt('Buatkan strategi pemasaran digital 30 hari untuk meluncurkan produk SaaS baru.')" class="w-full text-left p-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg text-[11px] text-theme-muted hover:text-white transition truncate block">
+          <span class="font-semibold text-emerald-500 mr-1">[BUSINESS]</span> Plan Pemasaran SaaS
+        </button>
+      </div>
+    </div>
+
+    <!-- History List -->
+    <div class="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+      <div class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-theme-muted">Riwayat Chat</div>
+      <div id="chat-history-list" class="space-y-1">
+        <!-- History items dynamically generated -->
+      </div>
+    </div>
+
+    <!-- User / Auth Footer -->
+    <div class="p-3 border-t border-theme bg-theme-sidebar">
+      <!-- Logged In View -->
+      <div id="user-profile" class="hidden flex items-center justify-between p-2 rounded-xl bg-theme-card border border-theme">
+        <div class="flex items-center space-x-2.5 overflow-hidden">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          </div>
+          <div class="truncate">
+            <p id="user-name" class="text-xs font-semibold truncate">Pengguna</p>
+            <p id="user-email" class="text-[10px] text-theme-muted truncate">user@email.com</p>
+          </div>
+        </div>
+        <button id="logout-btn" title="Keluar Akun" class="p-1.5 text-theme-muted hover:text-red-400 hover:bg-theme-hover rounded-lg transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+
+      <!-- Logged Out View -->
+      <div id="auth-buttons" class="space-y-2">
+        <button id="open-auth-modal" class="w-full py-2 px-3 bg-theme-card hover:bg-theme-hover border border-theme text-xs font-semibold rounded-xl flex items-center justify-center space-x-2 transition">
+          <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+          <span>Masuk / Daftar</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 flex flex-col h-full bg-theme-main relative overflow-hidden">
+    
+    <!-- Top Bar Header -->
+    <header class="h-14 border-b border-theme bg-theme-sidebar flex items-center justify-between px-4 z-10 shrink-0">
+      <div class="flex items-center space-x-3">
+        <button id="open-sidebar-btn" class="md:hidden p-2 text-theme-muted hover:text-white rounded-lg bg-theme-card border border-theme">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <span id="current-chat-title" class="text-xs font-semibold text-theme-muted truncate max-w-[180px] sm:max-w-xs">Percakapan Baru</span>
+      </div>
+
+      <!-- Right Controls (Theme & Settings) -->
+      <div class="flex items-center space-x-2">
+        <!-- Theme Selector -->
+        <div class="relative">
+          <select id="theme-select" class="bg-theme-card border border-theme text-xs rounded-xl px-3 py-1.5 focus:outline-none cursor-pointer text-theme-muted hover:text-white transition">
+            <option value="dark">Dark Theme</option>
+            <option value="light">Light Theme</option>
+            <option value="cyberpunk">Cyberpunk Neon</option>
+            <option value="oled">OLED Black</option>
+          </select>
+        </div>
+
+        <!-- API Key Settings Button -->
+        <button id="open-settings-btn" title="Pengaturan Backend" class="p-2 text-theme-muted hover:text-white bg-theme-card hover:bg-theme-hover border border-theme rounded-xl transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Chat Stream Container -->
+    <div id="chat-messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 max-w-4xl w-full mx-auto">
+      
+      <!-- Welcome Screen View -->
+      <div id="welcome-screen" class="h-full flex flex-col items-center justify-center text-center p-6 my-auto">
+        <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-xl mb-4">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <h2 class="text-xl md:text-2xl font-bold mb-2 tracking-tight">Apa yang bisa saya bantu hari ini?</h2>
+        <p class="text-xs md:text-sm text-theme-muted max-w-md mb-8 leading-relaxed">
+          Pilih dari library prompt di bawah atau ketik langsung pertanyaan Anda.
+        </p>
+
+        <!-- Example Prompt Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl w-full">
+          <button onclick="injectPrompt('Jelaskan perbedaan antara REST API dan GraphQL secara ringkas.')" class="p-3.5 bg-theme-card hover:bg-theme-hover border border-theme rounded-xl text-left text-xs transition group">
+            <p class="font-semibold text-emerald-500 mb-1 flex items-center space-x-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+              <span>REST vs GraphQL</span>
+            </p>
+            <p class="text-theme-muted group-hover:text-white transition">Komparasi kelebihan dan kekurangan kedua arsitektur API.</p>
+          </button>
+
+          <button onclick="injectPrompt('Berikan 5 ide proyek sampingan unik berbasis AI untuk developer web.')" class="p-3.5 bg-theme-card hover:bg-theme-hover border border-theme rounded-xl text-left text-xs transition group">
+            <p class="font-semibold text-emerald-500 mb-1 flex items-center space-x-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+              <span>Ide Proyek AI</span>
+            </p>
+            <p class="text-theme-muted group-hover:text-white transition">Inspirasi aplikasi web terintegrasi model kecerdasan buatan.</p>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Input Form Area -->
+    <div class="p-4 bg-theme-main border-t border-theme">
+      <div class="max-w-4xl mx-auto">
+        <form id="chat-form" class="relative flex items-center">
+          <textarea id="user-input" rows="1" placeholder="Kirim pesan ke SugarHill-Aruna AI..." class="w-full bg-theme-card border border-theme rounded-2xl py-3.5 pl-4 pr-12 text-xs md:text-sm focus:outline-none focus:border-emerald-500/50 resize-none max-h-32 transition"></textarea>
+          
+          <button type="submit" id="send-btn" class="absolute right-2.5 p-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition disabled:opacity-50 shadow-md">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </form>
+        <p class="text-[10px] text-center text-theme-muted mt-2">SugarHill-Aruna AI dapat menghasilkan kekeliruan. Periksa kembali informasi penting.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Auth Modal -->
+  <div id="auth-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-theme-sidebar border border-theme rounded-2xl w-full max-w-sm p-6 shadow-2xl relative">
+      <button id="close-auth-modal" class="absolute top-4 right-4 text-theme-muted hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+
+      <div class="text-center mb-6">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 mx-auto mb-3">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        </div>
+        <h3 class="font-bold text-base">Masuk Akun</h3>
+        <p class="text-xs text-theme-muted mt-1">Simpan dan sinkronkan riwayat chat Anda</p>
+      </div>
+
+      <div class="space-y-3">
+        <button id="google-login-btn" class="w-full py-2.5 px-4 bg-theme-card hover:bg-theme-hover border border-theme text-xs font-semibold rounded-xl flex items-center justify-center space-x-2 transition">
+          <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          <span>Lanjutkan dengan Google</span>
+        </button>
+
+        <div class="relative my-4 flex items-center justify-center">
+          <div class="border-t border-theme w-full"></div>
+          <span class="bg-theme-sidebar px-2 text-[10px] text-theme-muted uppercase">Atau</span>
+        </div>
+
+        <input type="email" id="auth-email" placeholder="Email Anda" class="w-full bg-theme-card border border-theme rounded-xl p-2.5 text-xs focus:outline-none focus:border-emerald-500">
+        <input type="password" id="auth-password" placeholder="Kata Sandi" class="w-full bg-theme-card border border-theme rounded-xl p-2.5 text-xs focus:outline-none focus:border-emerald-500">
+
+        <button id="email-login-btn" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl transition">
+          Masuk / Daftar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Key Settings Modal -->
+  <div id="settings-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-theme-sidebar border border-theme rounded-2xl w-full max-w-sm p-6 shadow-2xl relative">
+      <button id="close-settings-modal" class="absolute top-4 right-4 text-theme-muted hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+
+      <h3 class="font-bold text-base mb-1">Pengaturan Backend</h3>
+      <p class="text-xs text-theme-muted mb-4">Koneksi AI dikelola dengan aman melalui backend SugarHill-Aruna AI.</p>
+
+      <input type="text" id="api-key-input" value="API key tersimpan aman di server" disabled class="w-full bg-theme-card border border-theme rounded-xl p-2.5 text-xs mb-4 opacity-60 cursor-not-allowed">
+
+      <button id="save-api-key-btn" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl transition">
+        Tutup
+      </button>
+    </div>
+  </div>
+
+  <!-- Application Logic: backend integration; original UI/CSS above remains intact -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
